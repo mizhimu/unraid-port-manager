@@ -1,13 +1,15 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/Scanner.php';
+require_once __DIR__.'/Recommendation.php';
+require_once __DIR__.'/RecommendationSettings.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') { http_response_code(405); header('Allow: GET'); throw new InvalidArgumentException('只支持 GET'); }
     $action=$_GET['action'] ?? 'scan';
-    if (!in_array($action,['scan','available'],true)) throw new InvalidArgumentException('未知操作');
+    if (!in_array($action,['scan','available','recommend'],true)) throw new InvalidArgumentException('未知操作');
     $start=8000;$end=9000;$protocol=$_GET['protocol'] ?? 'both';
     if ($action==='available') {
         foreach (['start','end'] as $key) {
@@ -17,7 +19,16 @@ try {
         }
         if ($start>$end || !in_array($protocol,['tcp','udp','both'],true)) throw new InvalidArgumentException('范围或协议无效');
     }
+    if ($action==='recommend' && !\PortManager\Settings::read()['enabled']) {
+        echo json_encode(['enabled'=>false]);
+        exit;
+    }
     $snapshot=\PortManager\Scanner::scan();
+    if ($action==='recommend') {
+        $reserved=\PortManager\Recommendation::collect();
+        $sockets=\PortManager\Scanner::parseSs(\PortManager\Scanner::command('ss -H -antup'));
+        $snapshot=\PortManager\Recommendation::result($snapshot,$reserved,$sockets);
+    }
     if ($action==='available') $snapshot['protocolAvailability']=\PortManager\Scanner::protocolAvailability($snapshot,$start,$end);
     if ($action==='available') $snapshot['available']=\PortManager\Scanner::available($snapshot,$start,$end,$protocol);
     echo json_encode($snapshot,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE|JSON_THROW_ON_ERROR);

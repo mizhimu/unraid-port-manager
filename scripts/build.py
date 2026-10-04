@@ -2,10 +2,12 @@
 """Build a self-contained offline Unraid PLG; no remote release URL required."""
 from pathlib import Path
 import base64, hashlib, io, tarfile
-VERSION = '1.0.4'
+VERSION = '2026.10.04'
 AUTHOR = 'mizhimu'
 root = Path(__file__).resolve().parents[1]
 (root/'dist').mkdir(exist_ok=True)
+changes = (root/'CHANGELOG.md').read_text().strip()
+assert f'## {VERSION}' in changes, 'Current version missing from changelog'
 archive = io.BytesIO()
 with tarfile.open(fileobj=archive, mode='w:gz') as tar:
     tar.add(root/'src/port-manager', arcname='port-manager')
@@ -16,11 +18,7 @@ encoded = base64.b64encode(payload).decode()
 plg = f'''<?xml version="1.0" standalone="yes"?>
 <PLUGIN name="port-manager" author="{AUTHOR}" version="{VERSION}" min="6.12.0" launch="PortManager" icon="exchange" support="https://github.com/mizhimu/unraid-port-manager" pluginURL="https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.plg">
 <CHANGES><![CDATA[
-### 1.0.4
-- Enable update checks and one-click updates through the Unraid Plugins page.
-- Add the standard Support Thread link pointing to the project GitHub repository.
-- Remove the expandable feature description from the plugin list; retain a short introduction.
-- Include the 1.0.3 fixes: clear stale recommendations on refresh, exclude unpublished macvlan/ipvlan port configurations, and preserve all shared listener processes.
+{changes}
 ]]></CHANGES>
 <FILE Name="/boot/config/plugins/port-manager/payload-{VERSION}-{sha[:12]}.b64">
 <INLINE><![CDATA[{encoded}]]></INLINE>

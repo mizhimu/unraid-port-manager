@@ -1,0 +1,16 @@
+#dialogAddConfig .pm-container{margin:8px 0 4px;padding:7px 9px;border:1px solid #8885;border-radius:5px;width:fit-content;max-width:100%;font-size:12px;line-height:1.6;color:inherit;box-sizing:border-box}
+#dialogAddConfig .pm-container[hidden]{display:none!important}
+#dialogAddConfig .pm-container-heading{font-weight:600}
+#dialogAddConfig .pm-container-heading span{font-weight:normal;opacity:.7;margin-left:6px}
+#dialogAddConfig .pm-container-candidates,#dialogAddConfig .pm-container-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+#dialogAddConfig .pm-container button{font:inherit;letter-spacing:normal;min-height:28px;padding:3px 10px;border:1px solid #8885;border-radius:4px;background:transparent;color:inherit;cursor:pointer;margin:0}
+#dialogAddConfig .pm-container-candidates button{border-color:#159b8e80;color:#128579;background:#159b8e12;font-variant-numeric:tabular-nums}
+#dialogAddConfig .pm-container button:focus-visible{outline:2px solid #397dc3;outline-offset:2px}
+#dialogAddConfig .pm-container button:disabled{opacity:.5;cursor:default}
+#dialogAddConfig .pm-container-status{margin:7px 0;overflow-wrap:anywhere}
+#dialogAddConfig .pm-container small{opacity:.7;font-size:11px;display:block}
+
+#dialogAddConfig .pm-container-candidates{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;width:284px;max-width:100%}
+#dialogAddConfig .pm-container-candidates button{box-sizing:border-box;min-width:0;width:100%;height:24px;min-height:24px;padding:0 3px;line-height:22px;font-size:11px}
+#dialogAddConfig .pm-container-actions button{min-height:24px;height:24px;padding:0 8px;line-height:22px;font-size:11px}
+#dialogAddConfig .pm-container small a{color:inherit;text-decoration:underline}
