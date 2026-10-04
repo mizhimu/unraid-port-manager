@@ -1,6 +1,6 @@
 # Port Status · Unraid 端口状态
 
-查看 NAS 的端口使用情况，找到空闲端口，并在创建容器时直接填写推荐值。
+用于 Unraid 的端口查询与推荐插件。查看 NAS 上哪些端口正在使用、哪些被容器预留，并在创建或编辑容器时选择空闲主机端口。
 
 - 查看 TCP / UDP 监听、系统服务和容器端口映射。
 - 识别停止容器的端口预留，提示可能的启动冲突。
@@ -9,16 +9,16 @@
 
 ## 安装
 
-在 **Plugins → Install Plugin** 中粘贴：
+1. 打开 Unraid WebGUI 的 **Plugins → Install Plugin**。
+2. 粘贴以下安装地址，点击 **Install**：
 
-```text
-https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.plg
-```
+   ```text
+   https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.plg
+   ```
 
-安装后刷新 WebGUI，在首页查看概览，或打开 **Tools → 端口状态**。
-也可从 [Releases](https://github.com/mizhimu/unraid-port-manager/releases/latest) 下载 `port-manager.plg` 安装。
+3. 安装完成后刷新页面，在首页查看端口概览，或打开 **Tools → 端口状态**。
 
-需要 Unraid 6.12+ / 7.x、PHP 7.4+ 和系统自带的 `ss`、`docker`、`timeout`。当前集成依据 Unraid 7.3.2 验证，其他版本请参阅 [验收说明](TESTING.md)。
+**系统要求：**安装最低版本为 Unraid 6.12；当前实测环境为 Unraid 7.3.2，其他版本尚未完成实机验证。依赖系统提供的 PHP 7.4+、`ss`、`docker` 和 `timeout`，无须额外安装运行库。
 
 ## 功能展示
 
@@ -51,7 +51,7 @@ https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.
 容器弹窗从 **5000～65535** 中按升序推荐，要求 TCP 和 UDP 都空闲，并避开已采集到的系统占用、系统预留、运行及停止容器的宿主机端口，以及常用服务端口。
 
 - 停止的 host 网络容器无法自动推断全部启动端口，请在预留清单中补充。
-- host 和独立 IP 网络不使用宿主机端口映射，弹窗推荐不适用。
+- 容器弹窗推荐适用于 bridge 网络的宿主机端口映射。
 - 结果代表扫描时刻；有其他服务发生变化时，请刷新。采集不完整时暂停推荐。
 - 插件只保存自身设置，不修改容器、网络、防火墙或系统服务配置。
 
@@ -59,14 +59,23 @@ https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.
 
 ## 更新与卸载
 
-在 **Plugins → Check for Updates** 中检查并安装更新；也可从 Releases 下载新版。1.0.3 及更早版本需要先手动安装一次当前版本。
+- **更新：**在 **Plugins** 页面点击 **Check for Updates**，有新版时点击 **Update**。
+- **卸载：**在 **Plugins** 页面找到 Port Status，点击 **Remove**。卸载会删除插件及其自定义预留设置，保留容器和系统配置。
 
-在 Plugins 页面卸载，仅删除插件及其自身设置。版本记录见 [CHANGELOG.md](CHANGELOG.md)。
+安装包及发行记录见 [Releases](https://github.com/mizhimu/unraid-port-manager/releases)。
 
-## 支持与许可
+## 问题反馈
 
-问题和建议请提交 [GitHub Issues](https://github.com/mizhimu/unraid-port-manager/issues)，附上 Unraid 版本和复现步骤，并隐去私人信息。
+通过 [GitHub Issues](https://github.com/mizhimu/unraid-port-manager/issues) 提交问题或建议。报告问题时请附上 Unraid 版本、复现步骤和相关错误信息，隐去私人信息。
 
-本项目采用 PolyForm Noncommercial 1.0.0，图表改编自 Lieflat Charts，详见 [LICENSE](LICENSE) 和 [第三方声明](THIRD_PARTY_NOTICES.md)。
+维护者：[mizhimu](https://github.com/mizhimu)。
 
-[开发与验证](docs/DEVELOPMENT.md) · [实机验收](TESTING.md) · [发布流程](RELEASING.md)
+## 许可
+
+本项目源码公开，采用 **PolyForm Noncommercial 1.0.0 非商业许可**，并非 [OSI 定义](https://opensource.org/osd)的开源许可。使用、修改及分发须遵守 [LICENSE](LICENSE)。
+
+图表代码改编自 Lieflat Charts，采用同一许可；来源和署名见 [第三方声明](THIRD_PARTY_NOTICES.md)。
+
+## 开发文档
+
+[开发与验证](docs/DEVELOPMENT.md) · [实机验收](TESTING.md) · [发布流程](RELEASING.md) · [版本记录](CHANGELOG.md)
