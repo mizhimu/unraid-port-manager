@@ -85,7 +85,7 @@ const path = require('node:path');
     await buttons.first().waitFor();
     await page.screenshot({path:path.resolve('dist/container-preview.png')});
     require('node:fs').mkdirSync(path.resolve('docs/images'),{recursive:true});
-    await page.locator('#dialogAddConfig').screenshot({path:path.resolve('docs/images/container-port-recommendation.png')});
+    await page.locator('.pm-container').screenshot({path:path.resolve('docs/images/container-port-recommendation.png')});
     assert.deepEqual(errors,[]);
     console.log('PASS popup lifecycle, ascending/form exclusions, fill target preservation, batch, manual reasons, failure, network modes, stale response cancellation and reopen');
   } finally { await browser.close(); }

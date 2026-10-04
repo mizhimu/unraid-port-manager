@@ -17,7 +17,12 @@ const path = require('node:path');
           settings={enabled:lastBody.get('enabled')==='1',reserved:lastBody.get('reserved')};
         }
         await route.fulfill({contentType:'application/json',body:JSON.stringify(settings)});
-      }else if(url.pathname.endsWith('api.php')) await route.fulfill({contentType:'application/json',body:JSON.stringify({complete:true,groups:[],rows:[],summary:{occupied:0,configured:0,risks:0,containers:0},timestamp:'2026-10-04T12:00:00Z'})});
+      }else if(url.pathname.endsWith('api.php')) await route.fulfill({contentType:'application/json',body:JSON.stringify({complete:true,groups:[
+          {port:80,name:'nginx',source:'System',purpose:'网页管理服务',protocol:'tcp',owner:'pid:1',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'',notes:[]},
+          {port:8096,name:'jellyfin',source:'Docker',purpose:'Jellyfin 媒体服务器',protocol:'tcp',owner:'demo-jellyfin',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'8096 → 8096',notes:[]},
+          {port:9091,name:'transmission',source:'Docker',purpose:'下载服务',protocol:'tcp',owner:'demo-transmission',running:false,status:'configured',risk:'none',addresses:['0.0.0.0'],mapping:'9091 → 9091',notes:[]},
+          {port:32400,name:'plex',source:'Docker',purpose:'Plex 媒体服务器',protocol:'tcp',owner:'demo-plex',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'32400 → 32400',notes:[]}
+        ],rows:[],summary:{occupied:3,configured:1,risks:0,containers:3},timestamp:'2026-10-04T12:00:00Z'})});
       else if(url.pathname.startsWith('/plugins/port-manager/assets/')) {
         const file=path.resolve('src/port-manager/assets',path.basename(url.pathname));
         await route.fulfill({contentType:file.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(file,'utf8')});
@@ -27,6 +32,8 @@ const path = require('node:path');
     await page.waitForFunction(()=>!document.getElementById('pm-settings-fields').disabled, null, {timeout:5000}).catch(async error=>{console.error(errors, await page.locator('#pm-settings-message').textContent());throw error;});
     assert.equal(await page.isChecked('#pm-recommend-enabled'),true);
     assert.equal(await page.inputValue('#pm-reserved-ports'),'5500 # host 容器');
+    fs.mkdirSync('docs/images',{recursive:true});
+    await page.locator('#port-manager').screenshot({path:'docs/images/port-status-page.png'});
     await page.uncheck('#pm-recommend-enabled');
     await page.fill('#pm-reserved-ports','5500 # host 容器\n5600-5610,6200 # 预留');
     await page.click('#pm-settings-form button');
@@ -41,7 +48,7 @@ const path = require('node:path');
     assert.ok(cards.every(card=>card.right<=1180));
     fs.mkdirSync('docs/images',{recursive:true});
     await page.mouse.move(0,0);
-    await page.locator('.pm-workspace').screenshot({path:'docs/images/container-settings.png'});
+    await page.locator('#pm-container-settings').screenshot({path:'docs/images/container-settings.png'});
     await page.setViewportSize({width:600,height:900});
     const narrow=await page.locator('.pm-workspace>section').evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().top));
     assert.ok(narrow[0]<narrow[1] && narrow[1]<narrow[2]);
