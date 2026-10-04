@@ -1,0 +1,19 @@
+name: Checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: php tests/scanner.php
+      - run: php -l src/port-manager/include/Scanner.php && php -l src/port-manager/include/api.php
+      - run: node --check src/port-manager/assets/app.js && node --check src/port-manager/assets/dashboard.js && node --check src/port-manager/assets/charts.js
+      - run: python3 scripts/build.py && python3 tests/package.py

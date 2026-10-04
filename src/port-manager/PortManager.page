@@ -1,0 +1,6 @@
+Menu="Tools"
+Title="端口状态"
+Tag="exchange"
+Markdown="false"
+---
+<?php readfile('/usr/local/emhttp/plugins/port-manager/include/view.html'); ?>
