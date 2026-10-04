@@ -7,7 +7,7 @@ const path = require('node:path');
   try {
     const page = await browser.newPage({viewport:{width:1180,height:900}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    let settings={enabled:true,reserved:'5500 # host 容器'},lastBody;
+    let settings={enabled:true,reserved:'5500 # host 容器'},lastBody,scanDelay=0;
     await page.route('http://port-manager.test/**',async route=>{
       const request=route.request(),url=new URL(request.url());
       if(url.pathname.endsWith('settings.php')) {
@@ -17,12 +17,12 @@ const path = require('node:path');
           settings={enabled:lastBody.get('enabled')==='1',reserved:lastBody.get('reserved')};
         }
         await route.fulfill({contentType:'application/json',body:JSON.stringify(settings)});
-      }else if(url.pathname.endsWith('api.php')) await route.fulfill({contentType:'application/json',body:JSON.stringify({complete:true,groups:[
+      }else if(url.pathname.endsWith('api.php')) {if(scanDelay)await new Promise(resolve=>setTimeout(resolve,scanDelay));await route.fulfill({contentType:'application/json',body:JSON.stringify({complete:true,groups:[
           {port:80,name:'nginx',source:'System',purpose:'网页管理服务',protocol:'tcp',owner:'pid:1',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'',notes:[]},
           {port:8096,name:'jellyfin',source:'Docker',purpose:'Jellyfin 媒体服务器',protocol:'tcp',owner:'demo-jellyfin',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'8096 → 8096',notes:[]},
           {port:9091,name:'transmission',source:'Docker',purpose:'下载服务',protocol:'tcp',owner:'demo-transmission',running:false,status:'configured',risk:'none',addresses:['0.0.0.0'],mapping:'9091 → 9091',notes:[]},
           {port:32400,name:'plex',source:'Docker',purpose:'Plex 媒体服务器',protocol:'tcp',owner:'demo-plex',running:true,status:'occupied',risk:'none',addresses:['0.0.0.0'],mapping:'32400 → 32400',notes:[]}
-        ],rows:[],summary:{occupied:3,configured:1,risks:0,containers:3},timestamp:'2026-10-04T12:00:00Z'})});
+        ],...(url.searchParams.get('action')==='available'?{protocolAvailability:[{port:8002,kind:'both'},{port:8003,kind:'both'}]}:{}),rows:[],summary:{occupied:3,configured:1,risks:0,containers:3},timestamp:'2026-10-04T12:00:00Z'})});}
       else if(url.pathname.startsWith('/plugins/port-manager/assets/')) {
         const file=path.resolve('src/port-manager/assets',path.basename(url.pathname));
         await route.fulfill({contentType:file.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(file,'utf8')});
@@ -33,6 +33,29 @@ const path = require('node:path');
     assert.equal(await page.isChecked('#pm-recommend-enabled'),true);
     assert.equal(await page.inputValue('#pm-reserved-ports'),'5500 # host 容器');
     fs.mkdirSync('docs/images',{recursive:true});
+    for(const selector of ['#pm-refresh','#pm-find button[type="submit"]']) {
+      const button=page.locator(selector);
+      const normal=await button.evaluate(el=>{const s=getComputedStyle(el);return {bg:s.backgroundColor,color:s.color,spacing:s.letterSpacing};});
+      await button.hover();
+      const hover=await button.evaluate(el=>{const s=getComputedStyle(el);return {bg:s.backgroundColor,color:s.color,spacing:s.letterSpacing};});
+      assert.equal(hover.bg,normal.bg);assert.equal(hover.color,'rgb(255, 255, 255)');assert.equal(hover.spacing,'normal');
+      await page.mouse.down();
+      assert.equal(await button.evaluate(el=>getComputedStyle(el).backgroundColor),normal.bg);
+      await page.mouse.move(0,0);await page.mouse.up();
+    }
+    await page.selectOption('#pm-find-protocol','tcp');
+    await page.click('#pm-find button[type="submit"]');
+    await page.locator('#pm-available .pm-candidate').first().waitFor();
+    await page.click('#pm-clear-range');
+    assert.equal(await page.inputValue('#pm-start'),'');assert.equal(await page.inputValue('#pm-end'),'');
+    assert.equal(await page.inputValue('#pm-find-protocol'),'both');assert.equal(await page.locator('#pm-available .pm-candidate').count(),0);
+    await page.fill('#pm-start','8000');await page.fill('#pm-end','9000');
+    scanDelay=200;await page.click('#pm-find button[type="submit"]');await page.click('#pm-clear-range');
+    await page.waitForFunction(()=>!document.getElementById('pm-refresh').disabled);
+    assert.equal(await page.locator('#pm-available .pm-candidate').count(),0);
+    scanDelay=0;await page.fill('#pm-start','8000');await page.fill('#pm-end','9000');
+    await page.mouse.move(0,0);
+    await page.evaluate(()=>document.activeElement.blur());
     await page.locator('#port-manager').screenshot({path:'docs/images/port-status-page.png'});
     await page.uncheck('#pm-recommend-enabled');
     await page.fill('#pm-reserved-ports','5500 # host 容器\n5600-5610,6200 # 预留');
@@ -63,6 +86,6 @@ const path = require('node:path');
     fs.mkdirSync('dist',{recursive:true});
     await page.locator('#pm-container-settings').screenshot({path:'dist/settings-preview.png'});
     assert.deepEqual(errors,[]);
-    console.log('PASS full-page settings load, CSRF form body, save, reload persistence, server validation and edit preservation');
+    console.log('PASS primary button states, clear/delayed results, settings persistence and validation, desktop/narrow layout');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

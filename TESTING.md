@@ -60,3 +60,8 @@ Do not treat fixture, syntax or archive checks as evidence of target-machine run
 - Date-based metadata supports upgrade from earlier 1.x versions; installed NAS version and API checks are reported separately from mocked browser evidence.
 
 - Installed 2026.10.04 on Unraid 7.3.2 successfully; metadata showed the date version, historical CHANGES entries were present, and the installed recommendation API returned a complete snapshot.
+
+## 2026.10.05 checks
+
+- Browser fixture checks refresh/recommend button background and white text on hover and mouse-down, normal letter spacing, clearing bounds/protocol/candidates, and ignoring a delayed recommendation after clearing.
+- Existing settings save/reload/validation checks and desktop/narrow layout checks passed with the additional clear control.

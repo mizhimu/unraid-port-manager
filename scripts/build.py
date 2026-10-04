@@ -2,7 +2,7 @@
 """Build a self-contained offline Unraid PLG; no remote release URL required."""
 from pathlib import Path
 import base64, hashlib, io, tarfile
-VERSION = '2026.10.04'
+VERSION = '2026.10.05'
 AUTHOR = 'mizhimu'
 root = Path(__file__).resolve().parents[1]
 (root/'dist').mkdir(exist_ok=True)
