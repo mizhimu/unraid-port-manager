@@ -1,0 +1,87 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+process.chdir(path.resolve(__dirname, '..'));
+(async () => {
+  const browser = await chromium.launch({headless:true, ...(process.env.PM_BROWSER_CHANNEL ? {channel:process.env.PM_BROWSER_CHANNEL} : {})});
+  try {
+    const page = await browser.newPage({viewport:{width:1000,height:1000}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.setContent('<form><input name="contExtraParams"><button type="submit">应用</button></form><script>window.submits=0;window.changes=0;document.querySelector("form").addEventListener("submit",e=>{e.preventDefault();submits++;});document.querySelector("input").addEventListener("change",()=>changes++);</script>');
+    await page.addStyleTag({path:path.resolve('src/port-manager/assets/container.css')});
+    await page.addScriptTag({path:path.resolve('src/port-manager/assets/extra-params.js')});
+    const panel=page.locator('.pm-extra'), input=page.locator('[name="contExtraParams"]'), button=panel.locator('[data-fill]'), status=panel.locator('[role="status"]');
+    const group=name=>panel.locator(`[data-group="${name}"]`);
+    const action=(name,value)=>group(name).locator('[data-action]').selectOption(value);
+    const field=(name,key)=>group(name).locator(`[data-key="${key}"]`);
+    const reset=async text=>{
+      for(const name of ['cpu','memory','restart','stop']) await action(name,'keep');
+      await input.fill(text);
+    };
+    const args=async()=>{
+      const result=spawnSync('python3',['-c','import sys,shlex,json;print(json.dumps(shlex.split(sys.argv[1])))',await input.inputValue()],{encoding:'utf8'});
+      assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout);
+    };
+    assert.equal(await panel.getAttribute('open'),null);
+    await panel.locator('summary').click();
+    assert.equal(await button.isDisabled(),true);
+    const original='--label "note=keep spaces" --memory 512m --cpus=1 --restart=always --stop-timeout=10 --init=false --log-opt max-size=10m';
+    await input.fill(original);
+    await action('cpu','set');await field('cpu','cpus').fill('0.5');
+    await action('memory','set');await field('memory','memory').fill('2');
+    assert.equal(await input.inputValue(),original);
+    await button.click();
+    let parsed=await args();
+    assert.ok(parsed.includes('--cpus=0.5'));assert.ok(parsed.includes('--memory=2g'));
+    assert.ok(parsed.includes('note=keep spaces'));assert.ok(parsed.includes('--restart=always'));assert.ok(parsed.includes('--init=false'));
+    assert.equal(parsed.filter(v=>v.startsWith('--cpus=')).length,1);
+    assert.ok(!parsed.includes('512m'));
+    await reset('--restart=always --init --stop-timeout 10');
+    await action('stop','set');await field('stop','stop').fill('0');await button.click();
+    assert.deepEqual(await args(),['--restart=always','--init','--stop-timeout=0']);
+    await reset('--restart always --restart=no --init=false');
+    await action('restart','set');await field('restart','restart').selectOption('on-failure');await field('restart','restartRetries').fill('5');await button.click();
+    assert.deepEqual(await args(),['--init=false','--restart=on-failure:5']);
+    assert.equal(await panel.locator('[data-group="health"], [data-group="init"]').count(),0);
+    await reset('--health-cmd=\'test "$READY" = "yes"\' --health-interval=30s --init --label "unchanged"');
+    await action('cpu','set');await field('cpu','cpus').fill('2');await button.click();
+    assert.deepEqual(await args(),['--health-cmd=test "$READY" = "yes"','--health-interval=30s','--init','--label','unchanged','--cpus=2']);
+    await reset("--label '--cpus=7' -m512m");
+    await action('cpu','set');await field('cpu','cpus').fill('2');await action('memory','set');await field('memory','memory').fill('2');await button.click();
+    assert.deepEqual(await args(),['--label','--cpus=7','--cpus=2','--memory=2g']);
+    await reset('-m 512m --memory=1g --memory-swap=2g --cpus 2');
+    await action('memory','remove');await action('cpu','remove');await button.click();assert.deepEqual(await args(),['--memory-swap=2g']);
+    await reset('');await action('memory','set');await field('memory','unit').selectOption('m');await field('memory','memory').fill('5');
+    assert.equal(await button.isDisabled(),true);assert.match(await status.textContent(),/至少为 6/);
+    await field('memory','memory').fill('6');assert.equal(await button.isDisabled(),false);
+    await action('cpu','set');await field('cpu','cpus').fill('-1');assert.equal(await button.isDisabled(),true);
+    await reset('--cpu-quota=100000');await action('cpu','set');await field('cpu','cpus').fill('2');assert.match(await status.textContent(),/冲突/);
+    await reset('--rm');await action('restart','set');await field('restart','restart').selectOption('always');assert.match(await status.textContent(),/冲突/);
+    for(const bad of ['--label "unclosed','--label $(id)','--label a; echo bad','--cpus']) {
+      await reset(bad);await action('cpu','remove');assert.equal(await button.isDisabled(),true,bad);assert.equal(await input.inputValue(),bad);
+    }
+    await reset('--label \\"literal\\"');await action('cpu','set');await field('cpu','cpus').fill('2');await button.click();
+    assert.ok((await args()).includes('"literal"'));
+    await reset('--cpus=1');await action('cpu','set');await field('cpu','cpus').fill('2');
+    await input.fill('--label "changed manually" --cpus=3');await button.click();assert.deepEqual(await args(),['--label','changed manually','--cpus=2']);
+    await reset('--cpus=1');await action('cpu','remove');await button.click();assert.equal(await input.inputValue(),'');
+    await reset('');
+    await action('cpu','set');await field('cpu','cpus').fill('2');
+    await action('memory','set');await field('memory','unit').selectOption('g');await field('memory','memory').fill('2');
+    await action('restart','set');await field('restart','restart').selectOption('unless-stopped');
+    await action('stop','set');await field('stop','stop').fill('30');
+    assert.match(await panel.textContent(),/不绑定到指定核心/);
+    assert.match(await panel.textContent(),/不会提前占用/);
+    fs.mkdirSync('dist',{recursive:true});fs.mkdirSync('docs/images',{recursive:true});
+    await page.evaluate(()=>document.activeElement.blur());
+    await panel.screenshot({path:'dist/extra-params-preview.png'});
+    await panel.screenshot({path:'docs/images/extra-params.png'});
+    await page.setViewportSize({width:375,height:1000});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await panel.screenshot({path:'dist/extra-params-narrow-preview.png'});
+    assert.equal(await page.evaluate(()=>submits),0);assert.ok(await page.evaluate(()=>changes)>0);assert.deepEqual(errors,[]);
+    console.log('PASS extra parameters: explicit preview/fill, CPU/memory limits, independent lifecycle, removed health/init controls and preservation of manual values, aliases/duplicates/removal, unrelated/manual input preservation, validation/conflicts, events, no submit and narrow layout');
+  } finally {await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

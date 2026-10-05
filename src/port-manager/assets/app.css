@@ -27,3 +27,7 @@
 #port-manager .pm-range-actions{display:flex;gap:6px;align-items:center;min-width:0}
 #port-manager .pm-range-actions .pm-primary{flex:1;min-width:0}
 #port-manager button.pm-primary:active{background:var(--pm-accent);color:#fff;filter:brightness(.9)}
+
+/* Keep column names visible inside the inventory scroll area. */
+#port-manager .pm-table table{border-collapse:separate;border-spacing:0}
+#port-manager .pm-table th{position:sticky;top:0;z-index:2;background:var(--pm-drawer-bg,#f0f1f2);box-shadow:0 1px 0 var(--pm-line)}

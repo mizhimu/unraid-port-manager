@@ -14,7 +14,7 @@ assert plugin.attrib['support'] == 'https://github.com/mizhimu/unraid-port-manag
 assert plugin.attrib['pluginURL'] == 'https://raw.githubusercontent.com/mizhimu/unraid-port-manager/main/port-manager.plg'
 assert plugin.attrib['name'] == 'port-manager'
 assert plugin.find('CHANGES').text.strip() == (root / 'CHANGELOG.md').read_text().strip()
-for version in ['1.0.0','1.0.2','1.0.3','1.0.4','1.1.0','1.1.1','2026.10.04','2026.10.05']:
+for version in ['1.0.0','1.0.2','1.0.3','1.0.4','1.1.0','1.1.1','2026.10.04','2026.10.05','2026.10.05.01']:
     assert f'## {version}' in plugin.find('CHANGES').text
 payload = base64.b64decode(plugin.find('FILE/INLINE').text)
 assert hashlib.sha256(payload).hexdigest() in plugin.findall('FILE')[1].find('INLINE').text

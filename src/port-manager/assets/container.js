@@ -1,7 +1,93 @@
 /* Native Unraid container editor: recommendations never submit or alter container targets. */
 (() => {
   'use strict';
+  function initWebUI() {
+    const input = document.querySelector('[name="contWebUI"]');
+    const configs = document.getElementById('configLocation');
+    if (!input || !configs) return;
+    const panel = document.createElement('div');
+    panel.className = 'pm-webui';
+    input.insertAdjacentElement('afterend', panel);
+    const read = (row, name) => row.querySelector(`[name="${name}[]"]`)?.value.trim() || '';
+    function fill(port) {
+      input.value = `http://[IP]:[PORT:${port}]`;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      panel.querySelector('[role="status"]').textContent = `已填入主机端口 ${port}`;
+    }
+    function render() {
+      panel.replaceChildren();
+      const hint = document.createElement('p');
+      panel.append(hint);
+      const network = document.querySelector('[name="contNetwork"]')?.value;
+      if (window.drivers?.[network] !== 'bridge') {
+        hint.textContent = '此网络模式不使用主机端口映射，请手动填写 Web UI 地址。';
+        return;
+      }
+      const mappings = [];
+      configs.querySelectorAll('input[name="confType[]"]').forEach(type => {
+        if (type.value !== 'Port') return;
+        const row = type.closest('[id^="ConfigNum"]');
+        if (!row) return;
+        const host = read(row, 'confValue'), target = read(row, 'confTarget');
+        const match = host.match(/^(\d+)(?:-(\d+))?$/);
+        const targetMatch = target.match(/^(\d+)(?:-(\d+))?$/);
+        if (!match || !targetMatch) return;
+        const start = Number(match[1]), end = Number(match[2] || match[1]);
+        const targetStart = Number(targetMatch[1]), targetEnd = Number(targetMatch[2] || targetMatch[1]);
+        if (start < 1 || end > 65535 || start > end || targetStart < 1 || targetEnd > 65535 || targetStart > targetEnd) return;
+        mappings.push({host, target, start, end, name: read(row, 'confName'), mode: read(row, 'confMode').toUpperCase()});
+      });
+      if (!mappings.length) {
+        hint.textContent = '请先在下方添加端口映射，填写容器端口和主机端口，添加后可一键填入。';
+        return;
+      }
+      hint.textContent = '一键填入 · 请选择 Web UI 使用的端口，点击将替换当前 Web UI 地址。';
+      const choices = document.createElement('div');
+      choices.className = 'pm-webui-choices';
+      panel.append(choices);
+      mappings.forEach(mapping => {
+        const row = document.createElement('div');
+        row.className = 'pm-webui-choice';
+        const label = `${mapping.name ? mapping.name + ' · ' : ''}主机 ${mapping.host} → 容器 ${mapping.target}${mapping.mode ? ' · ' + mapping.mode : ''}`;
+        let select;
+        if (mapping.start !== mapping.end) {
+          const caption = document.createElement('span');
+          caption.textContent = label;
+          select = document.createElement('select');
+          select.setAttribute('aria-label', label + '：选择主机端口');
+          for (let port = mapping.start; port <= mapping.end; port++) {
+            const option = document.createElement('option');
+            option.value = port;
+            option.textContent = port;
+            select.append(option);
+          }
+          row.append(caption, select);
+        }
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = select ? '填入所选端口' : label;
+        button.addEventListener('click', () => fill(select ? select.value : mapping.start));
+        row.append(button);
+        if (mapping.mode === 'UDP') {
+          const note = document.createElement('small');
+          note.textContent = '纯 UDP 通常不用于网页访问';
+          row.append(note);
+        }
+        choices.append(row);
+      });
+      const status = document.createElement('p');
+      status.setAttribute('role', 'status');
+      panel.append(status);
+    }
+    new MutationObserver(render).observe(configs, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
+    ['input', 'change'].forEach(eventName => document.addEventListener(eventName, event => {
+      if (configs.contains(event.target) || event.target.name === 'contNetwork') render();
+    }));
+    render();
+  }
   function init() {
+    initWebUI();
     const dialog = document.getElementById('dialogAddConfig');
     if (!dialog || !window.jQuery) return;
     let panel, snapshot, controller, generation = 0, offset = 0, enabled = true;

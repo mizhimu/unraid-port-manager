@@ -65,3 +65,26 @@ Do not treat fixture, syntax or archive checks as evidence of target-machine run
 
 - Browser fixture checks refresh/recommend button background and white text on hover and mouse-down, normal letter spacing, clearing bounds/protocol/candidates, and ignoring a delayed recommendation after clearing.
 - Existing settings save/reload/validation checks and desktop/narrow layout checks passed with the additional clear control.
+
+- Web UI browser fixture (`node tests/webui.cjs`) passed: empty guidance, every valid added mapping, explicit click-to-fill, host port rather than container port, UDP labels, range selection, invalid/incomplete mapping exclusions, edit/delete synchronization, network switching, input/change events, no form submission and 375 px layout.
+- Existing container recommendation browser fixture passed after this change. Syntax and generated installation package checks passed.
+- Web UI integration on the actual Unraid page remains unverified. On a test NAS, check AddContainer and UpdateContainer in advanced view: add two mappings, choose each, edit/delete them, select a range, and switch networks. Confirm existing Web UI text is untouched until clicked, native save works, and light/dark layouts fit.
+
+## 2026-10-05 automated verification and timing
+
+- CI now installs locked Playwright dependencies and Chromium, runs container/settings/Web UI browser behavior tests, and uploads preview screenshots. Each browser test resolves repository paths from its script location, so the npm entrypoint works. The workflow changes have not yet run on GitHub Actions.
+- Local Chrome and Playwright Chromium browser tests both passed through `npm test --prefix tests`. JavaScript syntax and installation package validation passed.
+- All 63 PHP assertions (37 scanner, 16 recommendation, 10 settings) and five PHP syntax checks passed on Unraid 7.3.2 / PHP 8.4.23 using an isolated temporary copy of current source. CI retains PHP 7.4 coverage.
+- Read-only measurements on the current NAS with 32 configured containers, five consecutive runs: scan 166.9–272.4 ms; reservation collection 0.4–1.4 ms; all-socket collection 17.9–40.7 ms; recommendation calculation 2.3–2.7 ms; total 188.2–316.5 ms (median 282.8 ms). Every result was complete, with 691 candidates and no scan errors. Timings exclude HTTP/network and browser rendering, and do not represent high-concurrency or Docker failure scenarios. No scan cache or collection changes were introduced.
+- Actual-page acceptance is owned by the user; under the user's agreed convention, no reported issue means acceptance passed. It is separate from agent-run automated evidence.
+
+## 2026.10.05.01 checks
+
+- Extra Parameters offers only CPU limit, memory limit (minimum 6 MiB), restart policy and stop timeout. Health-check and init controls and their fill/remove handlers are removed. Existing manually entered health/init parameters are preserved when editing the supported options.
+- All five Playwright Chromium tests passed: container recommendations, settings, Web UI mapping, Extra Parameters and table scrolling. Tests cover aliases/duplicates, quoted unrelated values, manual changes before fill, conflicts and invalid values, field events, no automatic submission and narrow layouts.
+- Table tests verify fixed header coordinates at several vertical scroll positions including the bottom, opaque light/dark backgrounds, and horizontal header/body alignment on narrow screens.
+- GitHub illustrations are generated from current code and fixture data: Web UI mapping, supported Extra Parameters and the scrolled table with its header visible. They are illustrative browser fixtures rather than NAS screenshots.
+- Actual-page acceptance remains owned by the user; no reported issue means acceptance under the agreed convention.
+
+- Release package validation (including full source/archive equality and shell syntax), JavaScript syntax and all 63 PHP assertions passed. PHP checks used an isolated temporary copy on Unraid 7.3.2 / PHP 8.4.23.
+- Installed 2026.10.05.01 through the native Unraid plugin manager after backing up the previous PLG and installed files. The persisted PLG, sticky-table CSS and Extra Parameters script hashes match the local build.

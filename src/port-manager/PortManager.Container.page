@@ -3,5 +3,7 @@ Link="pm-container-hook"
 Cond="in_array($GLOBALS['myPage']['name'] ?? '', ['AddContainer', 'UpdateContainer'], true)"
 Eval="true"
 ---
-<link rel="stylesheet" href="/plugins/port-manager/assets/container.css?v=1.1.1">
-<script defer src="/plugins/port-manager/assets/container.js?v=1.1.1"></script>
+<link rel="stylesheet" href="/plugins/port-manager/assets/container.css?v=2026.10.05.01">
+<script defer src="/plugins/port-manager/assets/container.js?v=2026.10.05.01"></script>
+
+<script defer src="/plugins/port-manager/assets/extra-params.js?v=2026.10.05.01"></script>

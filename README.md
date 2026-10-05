@@ -36,6 +36,14 @@
 
 ### 创建容器时推荐端口
 
+Web UI 输入框下会提示先添加端口映射；添加后展示全部映射，点击所需主机端口填入 `http://[IP]:[PORT:主机端口]`。端口范围可选择具体端口，插件不会自动判断 Web UI 端口或提交表单。该功能适用于 bridge 网络。
+
+<img src="docs/images/container-webui.png" alt="Web UI 下列出端口映射，由用户选择填入" width="660">
+
+高级视图的“额外参数”下新增可展开的快捷配置：CPU 与内存上限、重启策略、停止等待时间。每项都有含义说明；默认保持现有参数，选择后先预览，再点击填入。不自动应用容器配置。
+
+<img src="docs/images/extra-params.png" alt="CPU、内存、重启策略与停止等待时间快捷配置" width="760">
+
 点击“添加另一个路径、端口、变量、标签或设备”，选择“端口”，主机端口下方会出现推荐候选。点击候选填入主机端口，再通过 Unraid 原有按钮保存；编辑容器时也可使用。
 
 <img src="docs/images/container-port-recommendation.png" alt="主机端口旁的空闲端口候选" width="320">
@@ -45,6 +53,10 @@
 <img src="docs/images/container-settings.png" alt="推荐开关与自定义预留端口" width="440">
 
 *完整页与推荐组件图片使用当前代码和示例数据生成；首页图片来自此前的 Unraid 实测。*
+
+端口列表的表头固定在列表滚动区域顶部，向下查看条目时仍可辨认每一列。
+
+<img src="docs/images/port-table-sticky.png" alt="列表滚动后表头仍保持可见，使用示例数据" width="1000">
 
 ## 使用说明
 

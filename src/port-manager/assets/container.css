@@ -14,3 +14,27 @@
 #dialogAddConfig .pm-container-candidates button{box-sizing:border-box;min-width:0;width:100%;height:24px;min-height:24px;padding:0 3px;line-height:22px;font-size:11px}
 #dialogAddConfig .pm-container-actions button{min-height:24px;height:24px;padding:0 8px;line-height:22px;font-size:11px}
 #dialogAddConfig .pm-container small a{color:inherit;text-decoration:underline}
+
+.pm-webui{margin:6px 0 10px;font-size:12px;line-height:1.6;color:inherit;max-width:100%}
+.pm-webui p{margin:4px 0;opacity:.8}
+.pm-webui-choices{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.pm-webui-choice{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.pm-webui button{font:inherit;letter-spacing:normal;padding:3px 8px;min-height:26px;margin:0;border:1px solid #159b8e80;border-radius:4px;color:#128579;background:#159b8e12;cursor:pointer;white-space:normal;text-align:left}
+.pm-webui select{font:inherit;min-width:75px;width:auto;margin:0}
+.pm-webui button:focus-visible,.pm-webui select:focus-visible{outline:2px solid #397dc3;outline-offset:2px}
+.pm-webui small{opacity:.7}
+
+.pm-extra{margin:8px 0 12px;max-width:760px;font-size:12px;line-height:1.6;color:inherit}
+.pm-extra summary{cursor:pointer;font-weight:600;padding:4px 0}
+.pm-extra p{margin:5px 0 9px;opacity:.8;overflow-wrap:anywhere}
+.pm-extra fieldset{border:1px solid #8885;border-radius:5px;margin:10px 0;padding:8px 12px;min-width:0}
+.pm-extra legend,.pm-extra h4{font-weight:600;font-size:13px}
+.pm-extra label{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:6px 0}
+.pm-extra input[type=number]{width:130px;max-width:100%;box-sizing:border-box}
+.pm-extra select{width:auto;max-width:100%;font:inherit;margin:0}
+.pm-extra textarea{display:block;width:100%;box-sizing:border-box;font:inherit;margin:0}
+.pm-extra [hidden]{display:none!important}
+.pm-extra pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#8881;border:1px solid #8883;border-radius:4px;padding:8px;margin:5px 0 10px;font-size:11px;color:inherit}
+.pm-extra button{font:inherit;letter-spacing:normal;margin:0;padding:4px 12px;min-height:28px;border:1px solid #8885;border-radius:4px;background:transparent;color:inherit;cursor:pointer}
+.pm-extra button:disabled{opacity:.5;cursor:default}
+.pm-extra button:focus-visible,.pm-extra summary:focus-visible{outline:2px solid #397dc3;outline-offset:2px}

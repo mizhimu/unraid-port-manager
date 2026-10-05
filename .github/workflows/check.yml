@@ -15,5 +15,18 @@ jobs:
           node-version: '22'
       - run: php tests/scanner.php && php tests/recommendation.php && php tests/settings.php
       - run: php -l src/port-manager/include/Scanner.php && php -l src/port-manager/include/api.php && php -l src/port-manager/include/Recommendation.php && php -l src/port-manager/include/RecommendationSettings.php && php -l src/port-manager/include/settings.php
-      - run: node --check src/port-manager/assets/app.js && node --check src/port-manager/assets/dashboard.js && node --check src/port-manager/assets/charts.js && node --check src/port-manager/assets/container.js
+      - run: node --check src/port-manager/assets/app.js && node --check src/port-manager/assets/dashboard.js && node --check src/port-manager/assets/charts.js && node --check src/port-manager/assets/container.js && node --check src/port-manager/assets/extra-params.js
       - run: python3 scripts/build.py && python3 tests/package.py
+      - name: Install browser test dependencies
+        run: npm ci --prefix tests
+      - name: Install Chromium
+        run: ./tests/node_modules/.bin/playwright install --with-deps chromium
+      - name: Run browser behavior tests
+        run: npm test --prefix tests
+      - name: Upload browser test previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-previews
+          path: dist/*preview.png
+          if-no-files-found: ignore

@@ -1,0 +1,10 @@
+{
+  "name": "port-manager-browser-tests",
+  "private": true,
+  "scripts": {
+    "test": "node container.cjs && node settings.cjs && node webui.cjs && node extra-params.cjs && node table.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
